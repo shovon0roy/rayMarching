@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ray Marching</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+        }
+        .slide {
+            display: none;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+            width: 100%;
+            height: 100%;
+        }
+        .slide.active {
+            display: flex;
+            opacity: 1;
+        }
+        .code-block {
+            background-color: #1f2937; /* gray-800 */
+            color: #d1d5db; /* gray-300 */
+            padding: 1rem;
+            border-radius: 0.5rem;
+            font-family: monospace;
+            white-space: pre-wrap;
+            /* *** UPDATED: Smaller font size and line height for pseudocode *** */
+            font-size: 0.8rem;
+            line-height: 1.4;
+        }
+        .code-block .comment { color: #6b7280; } /* gray-500 */
+        .code-block .keyword { color: #fb923c; } /* orange-400 */
+        .code-block .function { color: #60a5fa; } /* blue-400 */
+        .code-block .variable { color: #f87171; } /* red-400 */
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800 flex flex-col items-center justify-center h-screen p-4">
+
+    <!-- Slide Container -->
+    <div id="presentation-container" class="w-full max-w-5xl h-[600px] bg-white rounded-lg shadow-2xl relative flex items-center justify-center p-8">
+
+        <!-- Slide 1: Title -->
+        <div id="slide-1" class="slide active flex-col items-center justify-center text-center">
+            <h1 class="text-5xl font-bold text-gray-800 mb-4">Ray Marching</h1>
+            <p class="text-xl text-gray-600">A Guide to a Powerful Rendering Technique</p>
+        </div>
+
+        <!-- Slide 2: Theory - Ray Marching -->
+        <div id="slide-2" class="slide flex-col items-center justify-center w-full">
+            <h2 class="text-4xl font-bold mb-6">Theory: What is Ray Marching?</h2>
+            <div class="flex items-center gap-8">
+                <div id="slide-2-content" class="text-lg text-left max-w-md space-y-4">
+                    <p>Ray Marching takes <strong>iterative steps</strong> along a ray until it gets close to a surface.</p>
+                    <p>It uses a <strong>Signed Distance Function (SDF)</strong> to determine the largest "safe step" it can take without passing through an object.</p>
+                    <p>Think of it as walking in the fog: take a step, check your distance, repeat.</p>
+                </div>
+                <svg viewBox="0 0 200 150" class="w-80 rounded-lg bg-gray-50">
+                     <circle cx="170" cy="75" r="25" stroke="#3b82f6" stroke-width="2" fill="#bfdbfe"/>
+                     <line x1="10" y1="75" x2="145" y2="75" stroke="#ef4444" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+                     <circle cx="10" cy="75" r="3" fill="#ef4444"/>
+                     <circle cx="10" cy="75" r="60" stroke="#fb923c" stroke-width="1.5" stroke-dasharray="4" fill="none"/>
+                     <circle cx="70" cy="75" r="3" fill="#ef4444"/>
+                     <circle cx="70" cy="75" r="50" stroke="#fb923c" stroke-width="1.5" stroke-dasharray="4" fill="none"/>
+                     <circle cx="120" cy="75" r="3" fill="#ef4444"/>
+                     <circle cx="120" cy="75" r="25" stroke="#fb923c" stroke-width="1.5" stroke-dasharray="4" fill="none"/>
+                     <circle cx="145" cy="75" r="3" fill="#16a34a"/>
+                </svg>
+            </div>
+        </div>
+
+        <!-- Slide 3: Theory - Ray Tracing -->
+        <div id="slide-3" class="slide flex-col items-center justify-center w-full">
+            <h2 class="text-4xl font-bold mb-6">Theory: What is Ray Tracing?</h2>
+            <div class="flex items-center gap-8">
+                <div id="slide-3-content" class="text-lg text-left max-w-md space-y-4">
+                    <p>Ray Tracing finds the <strong>exact intersection</strong> between a ray and an object.</p>
+                    <p>It works by mathematically solving the equation of the ray and the equation of an object's surface (e.g., a triangle or sphere).</p>
+                    <p>Think of it as a sniper shot: one perfect calculation to find the hit point.</p>
+                </div>
+                <svg viewBox="0 0 200 150" class="w-80 rounded-lg bg-gray-50">
+                    <line x1="10" y1="75" x2="110" y2="75" stroke="#ef4444" stroke-width="2" marker-end="url(#arrowhead)"/>
+                    <circle cx="150" cy="75" r="40" stroke="#3b82f6" stroke-width="2" fill="#bfdbfe"/>
+                    <circle cx="110" cy="75" r="4" fill="#ef4444"/>
+                    <text x="110" y="95" text-anchor="middle" font-size="10">Exact Hit!</text>
+                    <defs><marker id="arrowhead" markerWidth="10" markerHeight="7" refX="0" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#ef4444" /></marker></defs>
+                </svg>
+            </div>
+        </div>
+
+        <!-- Slide 4: Comparative Analysis -->
+        <div id="slide-4" class="slide flex-col items-center justify-center w-full">
+            <h2 class="text-4xl font-bold mb-6">Comparative Analysis</h2>
+            <table class="w-full max-w-4xl text-lg border-collapse">
+                <thead>
+                    <tr class="bg-gray-200">
+                        <th class="p-3 text-left border">Feature</th>
+                        <th class="p-3 text-left border bg-red-100">Ray Tracing</th>
+                        <th class="p-3 text-left border bg-blue-100">Ray Marching</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td class="p-3 border font-bold">Core Method</td><td class="p-3 border">Analytical (solves equations)</td><td class="p-3 border">Iterative (takes steps)</td></tr>
+                    <tr><td class="p-3 border font-bold">Scene Type</td><td class="p-3 border">Discrete geometry (polygons)</td><td class="p-3 border">Procedural/Implicit surfaces (SDFs)</td></tr>
+                    <tr><td class="p-3 border font-bold">Accuracy</td><td class="p-3 border">Exact, pixel-perfect intersection</td><td class="p-3 border">Approximate, close to the surface</td></tr>
+                    <tr><td class="p-3 border font-bold">Requirement</td><td class="p-3 border">List of geometric objects</td><td class="p-3 border">A Signed Distance Function</td></tr>
+                    <tr><td class="p-3 border font-bold">Best For</td><td class="p-3 border">Hard-surface models, traditional CGI</td><td class="p-3 border">Fractals, volumetric effects, abstract art</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Slide 5: Pseudocode - Ray Tracing -->
+        <div id="slide-5" class="slide flex-col items-center justify-center w-full">
+            <h2 class="text-4xl font-bold mb-6">Pseudocode: Ray Tracing</h2>
+            <div id="slide-5-content" class="code-block w-full max-w-2xl">
+                <span class="keyword">function</span> <span class="function">Trace</span>(<span class="variable">ray</span>) {<br>
+                &nbsp;&nbsp;<span class="variable">closest_hit</span> = infinity<br>
+                &nbsp;&nbsp;<span class="variable">hit_object</span> = null<br><br>
+                &nbsp;&nbsp;<span class="comment">// Loop through every object in the scene</span><br>
+                &nbsp;&nbsp;<span class="keyword">for each</span> <span class="variable">object</span> <span class="keyword">in</span> scene {<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">// Calculate the exact intersection distance</span><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;<span class="variable">intersection_dist</span> = <span class="function">Intersect</span>(<span class="variable">ray</span>, <span class="variable">object</span>)<br><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">if</span> (<span class="variable">intersection_dist</span> &lt; <span class="variable">closest_hit</span>) {<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="variable">closest_hit</span> = <span class="variable">intersection_dist</span><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="variable">hit_object</span> = <span class="variable">object</span><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+                &nbsp;&nbsp;}<br><br>
+                &nbsp;&nbsp;<span class="keyword">return</span> <span class="variable">hit_object</span><br>
+                }
+            </div>
+        </div>
+        
+        <!-- Slide 6: Pseudocode - Ray Marching -->
+        <div id="slide-6" class="slide flex-col items-center justify-center w-full">
+            <h2 class="text-4xl font-bold mb-6">Pseudocode: Ray Marching</h2>
+            <div id="slide-6-content" class="code-block w-full max-w-2xl">
+                <span class="keyword">function</span> <span class="function">March</span>(<span class="variable">ray</span>) {<br>
+                &nbsp;&nbsp;<span class="variable">total_dist_traveled</span> = 0<br><br>
+                &nbsp;&nbsp;<span class="comment">// Loop for a max number of steps</span><br>
+                &nbsp;&nbsp;<span class="keyword">for</span> i = 0 <span class="keyword">to</span> MAX_STEPS {<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;<span class="variable">current_pos</span> = <span class="variable">ray.origin</span> + <span class="variable">total_dist_traveled</span> * <span class="variable">ray.direction</span><br><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">// Get shortest distance to the entire scene</span><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;<span class="variable">dist_to_scene</span> = <span class="function">SceneSDF</span>(<span class="variable">current_pos</span>)<br><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">if</span> (<span class="variable">dist_to_scene</span> &lt; HIT_THRESHOLD) {<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> HIT <span class="comment">// We've hit a surface</span><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;}<br><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;<span class="variable">total_dist_traveled</span> += <span class="variable">dist_to_scene</span><br><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">if</span> (<span class="variable">total_dist_traveled</span> > MAX_DISTANCE) {<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">break</span> <span class="comment">// Ray went too far</span><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+                &nbsp;&nbsp;}<br><br>
+                &nbsp;&nbsp;<span class="keyword">return</span> MISS<br>
+                }
+            </div>
+        </div>
+        
+        <!-- Slide 7: Example - Step 1 -->
+        <div id="slide-7" class="slide flex-col items-center justify-center w-full">
+            <h2 class="text-4xl font-bold mb-6">Example: Multi-Object Scene (Step 1)</h2>
+            <p class="text-lg mb-4">Scene: Ray at (0,0), Square at (3, 2), Circle at (5,0).</p>
+            <svg viewBox="0 0 400 250" class="w-full max-w-3xl rounded-lg bg-gray-50">
+                <!-- Grid and Ray -->
+                <line x1="20" y1="125" x2="380" y2="125" stroke="#6b7280" stroke-width="2" marker-end="url(#arrowhead)"/>
+                <circle cx="20" cy="125" r="5" fill="#ef4444"/>
+                <text x="20" y="145" font-size="12" text-anchor="middle">Origin(0,0)</text>
+                
+                <!-- Circle -->
+                <circle cx="225" cy="125" r="40" fill="#bfdbfe" stroke="#3b82f6" stroke-width="2"/>
+                <text x="225" y="110" font-size="12" text-anchor="middle">Dist = 4</text>
+
+                <!-- Square -->
+                <rect x="140" y="20" width="40" height="40" fill="#a7f3d0" stroke="#10b981" stroke-width="2"/>
+                <text x="160" y="15" font-size="12" text-anchor="middle">Dist ≈ 2.6</text>
+                
+                <!-- Step Visualization -->
+                <circle cx="20" cy="125" r="135" stroke="#fb923c" stroke-width="2" stroke-dasharray="4" fill="none"/>
+                <text x="70" y="115" class="text-orange-500 font-bold" font-size="12" text-anchor="middle">Safe Distance = min(4, 2.6) = 2.6</text>
+            </svg>
+            <p class="mt-4 text-lg">1. <strong>Calculate all distances:</strong> The distance to the square is ~2.6, and to the circle is 4.</p>
+            <p class="text-lg">2. <strong>Find the minimum and march:</strong> The smallest distance is ~2.6, so we move 2.6 units forward.</p>
+        </div>
+
+        <!-- Slide 8: Example - Step 2 -->
+        <div id="slide-8" class="slide flex-col items-center justify-center w-full">
+            <h2 class="text-4xl font-bold mb-6">Example: Multi-Object Scene (Step 2)</h2>
+            <p class="text-lg mb-4">We are now at (2.6, 0). The ray continues straight.</p>
+            <svg viewBox="0 0 400 250" class="w-full max-w-3xl rounded-lg bg-gray-50">
+                <!-- Ray Path -->
+                <line x1="20" y1="125" x2="380" y2="125" stroke="#6b7280" stroke-width="1" stroke-dasharray="2"/>
+                <line x1="20" y1="125" x2="124" y2="125" stroke="#ef4444" stroke-width="2" />
+                <circle cx="124" cy="125" r="5" fill="#ef4444"/>
+                <text x="124" y="145" font-size="8" text-anchor="middle">Current Pos (2.6, 0)</text>
+
+                <!-- Circle -->
+                <circle cx="225" cy="125" r="40" fill="#bfdbfe" stroke="#3b82f6" stroke-width="2"/>
+                <text x="225" y="110" font-size="12" text-anchor="middle">New Dist = 1.4</text>
+
+                <!-- Square -->
+                <rect x="140" y="20" width="40" height="40" fill="#a7f3d0" stroke="#10b981" stroke-width="2"/>
+                <text x="160" y="15" font-size="12" text-anchor="middle">New Dist ≈ 1.54</text>
+                
+                <!-- Step Visualization -->
+                <circle cx="124" cy="125" r="59" stroke="#fb923c" stroke-width="2" stroke-dasharray="4" fill="none"/>
+                <text x="150" y="115" class="text-orange-500 font-bold" font-size="6" text-anchor="middle">Safe Dist = min(1.4, 1.54) = 1.4</text>
+            </svg>
+            <p class="mt-4 text-lg">1. <strong>Recalculate:</strong> From the new point, the distance to the circle is 1.4, and to the square is ~1.54.</p>
+            <p class="text-lg">2. <strong>Find the minimum and march:</strong> The circle is now closer. We move 1.4 units forward.</p>
+        </div>
+
+        <!-- NEW Slide 9: Example - The Hit -->
+        <div id="slide-9" class="slide flex-col items-center justify-center w-full">
+            <h2 class="text-4xl font-bold mb-6">Example: Multi-Object Scene (The Hit)</h2>
+            <p class="text-lg mb-4">We are now at (4, 0). Repeat the process.</p>
+            <svg viewBox="0 0 400 250" class="w-full max-w-3xl rounded-lg bg-gray-50">
+                <!-- Ray Path -->
+                <line x1="20" y1="125" x2="380" y2="125" stroke="#6b7280" stroke-width="1" stroke-dasharray="2"/>
+                <line x1="20" y1="125" x2="190" y2="125" stroke="#ef4444" stroke-width="2" />
+                <circle cx="180" cy="125" r="5" fill="#ef4444"/>
+                <text x="150" y="148" font-size="8" text-anchor="middle">Current Pos (4, 0)</text>
+
+                <!-- Circle -->
+                <circle cx="225" cy="125" r="40" fill="#bfdbfe" stroke="#3b82f6" stroke-width="2"/>
+                <text x="225" y="110" font-size="12" text-anchor="middle" class="text-green-600 font-bold">New Dist = 0</text>
+
+                <!-- Square -->
+                <rect x="140" y="20" width="40" height="40" fill="#a7f3d0" stroke="#10b981" stroke-width="2"/>
+                <text x="160" y="15" font-size="12" text-anchor="middle">New Dist ≈ 1.73</text>
+            </svg>
+            <p class="mt-4 text-lg">1. <strong>Recalculate distances:</strong> The new distance to the circle is 0, and to the square is ~1.73.</p>
+            <p class="text-lg font-bold text-green-600">2. <strong>Result:</strong> The minimum distance is 0. We have hit the circle!</p>
+        </div>
+
+        <!-- Slide 10: Pros and Cons - Ray Tracing -->
+        <div id="slide-10" class="slide flex-col items-center justify-center w-full">
+            <h2 class="text-4xl font-bold mb-6">Ray Tracing: Pros & Cons</h2>
+            <div class="flex gap-8 w-full max-w-4xl">
+                <div class="w-1/2 bg-green-50 p-6 rounded-lg">
+                    <h3 class="text-2xl font-bold mb-4 text-green-700">Pros ✅</h3>
+                    <ul class="list-disc list-inside space-y-2 text-lg">
+                        <li>Pixel-perfect accuracy</li>
+                        <li>Extremely fast for polygons (hardware accelerated)</li>
+                        <li>Mature and well-understood technology</li>
+                        <li>Produces sharp, clean reflections and shadows</li>
+                    </ul>
+                </div>
+                <div class="w-1/2 bg-red-50 p-6 rounded-lg">
+                    <h3 class="text-2xl font-bold mb-4 text-red-700">Cons ❌</h3>
+                    <ul class="list-disc list-inside space-y-2 text-lg">
+                        <li>Struggles with non-polygonal shapes</li>
+                        <li>Complex geometry can be slow without acceleration structures</li>
+                        <li>Can be difficult to implement from scratch</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 11: Pros and Cons - Ray Marching -->
+        <div id="slide-11" class="slide flex-col items-center justify-center w-full">
+            <h2 class="text-4xl font-bold mb-6">Ray Marching: Pros & Cons</h2>
+            <div class="flex gap-8 w-full max-w-4xl">
+                <div class="w-1/2 bg-green-50 p-6 rounded-lg">
+                    <h3 class="text-2xl font-bold mb-4 text-green-700">Pros ✅</h3>
+                    <ul class="list-disc list-inside space-y-2 text-lg">
+                        <li>Renders mathematically complex shapes (fractals) easily</li>
+                        <li>Great for volumetric effects (clouds, fog)</li>
+                        <li>Operations like blending and repetition are simple</li>
+                        <li>Can produce natural soft shadows</li>
+                    </ul>
+                </div>
+                <div class="w-1/2 bg-red-50 p-6 rounded-lg">
+                    <h3 class="text-2xl font-bold mb-4 text-red-700">Cons ❌</h3>
+                    <ul class="list-disc list-inside space-y-2 text-lg">
+                        <li>Intersection is an approximation, not exact</li>
+                        <li>Can be slower than ray tracing for simple scenes</li>
+                        <li>Performance depends heavily on the complexity of the SDF</li>
+                        <li>Can miss thin objects if steps are too large</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 12: Conclusion -->
+        <div id="slide-12" class="slide flex-col items-center justify-center text-center">
+            <h2 class="text-4xl font-bold mb-6">Conclusion: Which One to Use?</h2>
+            <div id="slide-12-content" class="text-xl max-w-3xl space-y-6">
+                <p>It's not about which is "better," but which is the <strong>right tool for the job</strong>.</p>
+                <p class="p-4 bg-red-100 rounded-lg">Use <strong>Ray Tracing</strong> for rendering scenes with hard-surface, polygonal models, where precision and sharp details are key.</p>
+                <p class="p-4 bg-blue-100 rounded-lg">Use <strong>Ray Marching</strong> for procedural art, fractals, volumetric effects, and scenes defined by pure mathematics.</p>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Navigation -->
+    <div class="flex items-center justify-between w-full max-w-5xl mt-4">
+        <button id="prev-btn" class="px-6 py-2 bg-gray-700 text-white rounded-lg shadow hover:bg-gray-800 transition disabled:opacity-50 disabled:cursor-not-allowed">Previous</button>
+        <div id="page-counter" class="text-lg font-semibold text-gray-600">1 / 12</div>
+        <button id="next-btn" class="px-6 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed">Next</button>
+    </div>
+
+    <script>
+        // --- Presentation Logic ---
+        let currentSlide = 1;
+        const totalSlides = 12; // *** UPDATED total slides ***
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const pageCounter = document.getElementById('page-counter');
+
+        function showSlide(slideNumber) {
+            document.querySelector('.slide.active')?.classList.remove('active');
+            document.getElementById(`slide-${slideNumber}`)?.classList.add('active');
+            currentSlide = slideNumber;
+            updateUI();
+        }
+
+        function updateUI() {
+            pageCounter.textContent = `${currentSlide} / ${totalSlides}`;
+            prevBtn.disabled = currentSlide === 1;
+            nextBtn.disabled = currentSlide === totalSlides;
+        }
+
+        prevBtn.addEventListener('click', () => showSlide(currentSlide > 1 ? currentSlide - 1 : 1));
+        nextBtn.addEventListener('click', () => showSlide(currentSlide < totalSlides ? currentSlide + 1 : totalSlides));
+
+        document.addEventListener('DOMContentLoaded', () => showSlide(1));
+    </script>
+</body>
+</html>
